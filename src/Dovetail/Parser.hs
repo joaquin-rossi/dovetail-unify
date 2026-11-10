@@ -23,14 +23,18 @@ import Text.Parsec
 import Dovetail (Equation (..), Name, Term (..), atom)
 import Dovetail.Parser.Lexer
 
+-- | A parser over the tokens produced by 'tokenize'.
 type Parser = Parsec [Lexeme] ()
 
+-- | Parse a single term.
 parseTerm :: String -> Either ParseError Term
 parseTerm = runTokens term
 
+-- | Parse a single equation.
 parseEquation :: String -> Either ParseError Equation
 parseEquation = runTokens equation
 
+-- | Parse one or more comma-separated equations.
 parseEquations :: String -> Either ParseError [Equation]
 parseEquations = runTokens equations
 
@@ -42,12 +46,15 @@ runTokens p input = do
     startAt (l : _) = setPosition (lexemeStart l)
     startAt [] = pure ()
 
+-- | One or more comma-separated equations.
 equations :: Parser [Equation]
 equations = sepBy1 equation (symbol TokComma)
 
+-- | Two terms separated by @=@.
 equation :: Parser Equation
 equation = Equation <$> term <* symbol TokEquals <*> term
 
+-- | A variable, a functor with optional arguments, or an integer atom.
 term :: Parser Term
 term = variable <|> functor <|> integer <?> "term"
 

@@ -1,5 +1,7 @@
 # dovetail-unify
 
+[![CI](https://github.com/joaquin-rossi/dovetail-unify/actions/workflows/ci.yml/badge.svg)](https://github.com/joaquin-rossi/dovetail-unify/actions/workflows/ci.yml)
+
 Haskell library for syntactic unification of first-order terms.
 
 ## Example

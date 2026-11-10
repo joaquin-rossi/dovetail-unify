@@ -1,4 +1,27 @@
-module Dovetail where
+-- | Syntactic unification and anti-unification of first-order terms.
+module Dovetail
+  ( -- * Terms
+    Name
+  , Term (..)
+  , atom
+  , vars
+  , occursVar
+
+    -- * Substitutions
+  , Subst
+  , applySubst
+  , composeSubst
+  , extendSubst
+
+    -- * Unification
+  , Equation (..)
+  , UnifyError (..)
+  , unify
+  , unifyAll
+
+    -- * Anti-unification
+  , antiUnify
+  ) where
 
 import Data.List (mapAccumL)
 import Data.Map.Strict (Map)
@@ -6,22 +29,30 @@ import Data.Map.Strict qualified as Map
 import Data.Set (Set)
 import Data.Set qualified as Set
 
+-- | Name of a functor or a variable.
 type Name = String
 
+-- | A first-order term.
 data Term =
+    -- | A functor applied to its arguments.
     Fun Name [Term]
+    -- | A variable.
   | Var Name
   deriving (Eq, Ord, Show)
 
+-- | A functor with no arguments.
 atom :: Name -> Term
 atom s = Fun s []
 
+-- | The variables occurring in a term.
 vars :: Term -> Set Name
 vars (Fun _ ts) = foldMap vars ts
 vars (Var n) = Set.singleton n
 
+-- | A mapping from variables to the terms that replace them.
 type Subst = Map Name Term
 
+-- | Replace every bound variable in a term, in a single pass.
 applySubst :: Subst -> Term -> Term
 applySubst sub = go
   where
@@ -37,18 +68,24 @@ composeSubst sub2 sub1 =
   Map.filterWithKey (\n t -> t /= Var n) $
     (applySubst sub2 <$> sub1) `Map.union` sub2
 
+-- | Bind a variable to a term, applying the new binding to the existing ones.
 extendSubst :: Name -> Term -> Subst -> Subst
-extendSubst n t sub = 
+extendSubst n t sub =
   Map.insert n t $
     applySubst (Map.singleton n t) <$> sub
 
+-- | An equation between two terms, @lhs = rhs@.
 data Equation = Equation !Term !Term deriving (Eq, Show)
 
+-- | Why two terms cannot be unified.
 data UnifyError =
+    -- | Two functors differ in name or arity.
     Clash Name Name
+    -- | A variable would have to be bound to a term that contains it.
   | OccursCheck Name Term
   deriving (Eq, Show)
 
+-- | Whether a variable occurs in a term.
 occursVar :: Name -> Term -> Bool
 occursVar n (Fun _ ts) = any (occursVar n) ts
 occursVar n (Var m) = n == m

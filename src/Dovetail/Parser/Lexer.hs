@@ -1,3 +1,4 @@
+-- | Tokenizer for "Dovetail.Parser". Whitespace between tokens is discarded.
 module Dovetail.Parser.Lexer
   ( Token (..)
   , Lexeme (..)
@@ -10,6 +11,7 @@ import Text.Parsec.String (Parser)
 
 import Dovetail (Name)
 
+-- | A token of the term syntax.
 data Token
   = TokVar Name
   | TokName Name
@@ -20,6 +22,7 @@ data Token
   | TokEquals
   deriving (Eq, Show)
 
+-- | A token together with where it starts and ends in the input.
 data Lexeme = Lexeme
   { lexemeStart :: SourcePos
   , lexemeEnd :: SourcePos
@@ -27,6 +30,7 @@ data Lexeme = Lexeme
   }
   deriving (Eq, Show)
 
+-- | Split the input into tokens. The source name is only used in errors.
 tokenize :: SourceName -> String -> Either ParseError [Lexeme]
 tokenize = parse (spaces *> many (lexeme <* spaces) <* eof)
 
@@ -53,6 +57,7 @@ tok =
     identChar = alphaNum <|> char '_'
     integer = option id (negate <$ char '-') <*> (read <$> many1 digit) <* notFollowedBy identChar
 
+-- | Render a token as it appears in the input, quoted, for error messages.
 showToken :: Token -> String
 showToken = show . text
   where

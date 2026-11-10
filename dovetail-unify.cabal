@@ -1,26 +1,40 @@
 cabal-version:      3.14
 name:               dovetail-unify
 version:            0.1.0.0
--- synopsis:
--- description:
+synopsis:           Syntactic unification and anti-unification of first-order terms
+description:
+    A small library for first-order terms: most general unifiers,
+    least general generalizations, substitutions, and a parser for
+    Prolog-style terms and equations.
 homepage:           https://github.com/joaquin-rossi/dovetail-unify
+bug-reports:        https://github.com/joaquin-rossi/dovetail-unify/issues
 license:            AGPL-3.0-or-later
 license-file:       LICENSE
 author:             Joaquín Rossi
 maintainer:         joaquin@joaquinrossi.net
--- copyright:
+copyright:          2026 Joaquín Rossi
 category:           Math
 build-type:         Simple
+tested-with:        GHC ==9.10.3 || ==9.12.2 || ==9.14.1
 extra-doc-files:
     README.md
 
--- extra-source-files:
+source-repository head
+    type:     git
+    location: https://github.com/joaquin-rossi/dovetail-unify.git
 
 common extensions
     default-language: GHC2024
 
 common ghc-options
-    ghc-options: -Wall -Widentities
+    ghc-options:
+        -Wall
+        -Wcompat
+        -Widentities
+        -Wincomplete-record-updates
+        -Wincomplete-uni-patterns
+        -Wmissing-export-lists
+        -Wredundant-constraints
 
 common rts-options
     ghc-options: -rtsopts
@@ -33,7 +47,6 @@ library
     exposed-modules:  Dovetail
                       Dovetail.Parser
                       Dovetail.Parser.Lexer
-    -- other-extensions:
     build-depends:    base >=4.20 && <4.23,
                       containers >=0.7 && <0.9,
                       parsec ^>=3.1.18
