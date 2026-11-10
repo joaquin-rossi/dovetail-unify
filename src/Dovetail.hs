@@ -52,7 +52,7 @@ solve s ((t1,t2):rest) =
     (t, TVar n) -> eliminate n t
     -- Decompose or Clash
     (TTerm n us, TTerm m vs)
-      | n == m -> solve s (zip us vs ++ rest)
+      | n == m && length us == length vs -> solve s (zip us vs ++ rest)
       | otherwise -> Left (Clash n m)
   where
     eliminate n t
