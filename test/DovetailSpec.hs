@@ -1,5 +1,6 @@
 module DovetailSpec (spec) where
 
+import Data.Foldable (for_)
 import Test.Hspec
 import Data.Map.Strict qualified as Map
 
@@ -38,6 +39,32 @@ spec = do
     it "replaces simultaneously, without re-applying to the result" $ do
       let sub = Map.fromList [("X", y), ("Y", a)]
       applySubst sub (f [x, y]) `shouldBe` f [y, a]
+
+  describe "composeSubst" $ do
+    let sub1 = Map.fromList [("X", f [y]), ("Z", a)]
+        sub2 = Map.fromList [("Y", g [z]), ("Z", b)]
+
+    it "applies the right substitution first, then the left one" $ do
+      let sub = composeSubst sub2 sub1
+      for_ [x, y, z, f [x, y, z], g [Var "W"]] $ \t ->
+        applySubst sub t `shouldBe` applySubst sub2 (applySubst sub1 t)
+
+    it "applies the left substitution to the right one's bindings" $ do
+      composeSubst sub2 sub1
+        `shouldBe` Map.fromList [("X", f [g [z]]), ("Y", g [z]), ("Z", a)]
+
+    it "has the empty substitution as identity" $ do
+      composeSubst Map.empty sub1 `shouldBe` sub1
+      composeSubst sub1 Map.empty `shouldBe` sub1
+
+    it "drops bindings that become trivial" $ do
+      composeSubst (Map.fromList [("Y", x)]) (Map.fromList [("X", y)])
+        `shouldBe` Map.fromList [("Y", x)]
+
+    it "is associative" $ do
+      let sub3 = Map.fromList [("Z", y), ("W", x)]
+      composeSubst sub3 (composeSubst sub2 sub1)
+        `shouldBe` composeSubst (composeSubst sub3 sub2) sub1
 
   describe "unify" $ do
     let unifies l r = do

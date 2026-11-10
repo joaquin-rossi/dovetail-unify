@@ -28,6 +28,15 @@ applySubst sub = go
     go (Fun n ts) = Fun n (go <$> ts)
     go t@(Var n)  = Map.findWithDefault t n sub
 
+-- | Composition of substitutions, like function composition: applying
+-- @composeSubst sub2 sub1@ is the same as applying @sub1@ and then @sub2@.
+--
+-- Bindings that become trivial, like @X ↦ X@, are dropped.
+composeSubst :: Subst -> Subst -> Subst
+composeSubst sub2 sub1 =
+  Map.filterWithKey (\n t -> t /= Var n) $
+    (applySubst sub2 <$> sub1) `Map.union` sub2
+
 extendSubst :: Name -> Term -> Subst -> Subst
 extendSubst n t sub = 
   Map.insert n t $
