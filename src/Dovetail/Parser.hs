@@ -4,6 +4,7 @@
 -- * Functors are lowercase identifiers optionally followed by parenthesised arguments: @f(X, g(a))@
 -- * Integers are atoms (they cannot take arguments): @42@, @-7@
 -- * Equations are two terms separated by @=@: @f(X) = f(a)@
+-- * Systems of equations are separated by commas: @X = f(Y), Y = a@
 --
 -- Whitespace between tokens is ignored, so @f (a)@ is the same as @f(a)@.
 module Dovetail.Parser
@@ -11,8 +12,10 @@ module Dovetail.Parser
   , ParseError
   , parseTerm
   , parseEquation
+  , parseEquations
   , term
   , equation
+  , equations
   ) where
 
 import Text.Parsec
@@ -28,6 +31,9 @@ parseTerm = runTokens term
 parseEquation :: String -> Either ParseError Equation
 parseEquation = runTokens equation
 
+parseEquations :: String -> Either ParseError [Equation]
+parseEquations = runTokens equations
+
 runTokens :: Parser a -> String -> Either ParseError a
 runTokens p input = do
   toks <- tokenize "" input
@@ -35,6 +41,9 @@ runTokens p input = do
   where
     startAt (l : _) = setPosition (lexemeStart l)
     startAt [] = pure ()
+
+equations :: Parser [Equation]
+equations = sepBy1 equation (symbol TokComma)
 
 equation :: Parser Equation
 equation = Equation <$> term <* symbol TokEquals <*> term

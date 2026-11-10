@@ -1,6 +1,7 @@
 module ParserSpec (spec) where
 
 import Data.Either (isLeft)
+import Data.Map.Strict qualified as Map
 import Test.Hspec
 
 import Dovetail
@@ -66,6 +67,23 @@ spec = do
     it "works with unify" $ do
       let result = do
             e@(Equation lhs _) <- either (Left . show) Right (parseEquation "f(a, Y) = f(X, b)")
-            s <- either (Left . show) Right (unify e)
-            pure (applySubst s lhs)
+            sub <- either (Left . show) Right (unifyAll [e])
+            pure (applySubst sub lhs)
       result `shouldBe` Right (Fun "f" [atom "a", atom "b"])
+
+  describe "parseEquations" $ do
+    it "parses comma-separated equations" $ do
+      parseEquations "X = f(Y, Z), Y = a"
+        `shouldBe` Right [Equation (Var "X") (Fun "f" [Var "Y", Var "Z"]), Equation (Var "Y") (atom "a")]
+      parseEquations "X = a" `shouldBe` Right [Equation (Var "X") (atom "a")]
+
+    it "rejects malformed systems" $ do
+      parseEquations "" `shouldSatisfy` isLeft
+      parseEquations "X = a," `shouldSatisfy` isLeft
+      parseEquations "X = a, b" `shouldSatisfy` isLeft
+
+    it "works with unifyAll" $ do
+      let result = do
+            eqs <- either (Left . show) Right (parseEquations "X = f(Y), Y = a")
+            either (Left . show) Right (unifyAll eqs)
+      result `shouldBe` Right (Map.fromList [("X", Fun "f" [atom "a"]), ("Y", atom "a")])
