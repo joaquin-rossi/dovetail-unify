@@ -43,7 +43,7 @@ lexeme = do
 tok :: Parser Token
 tok =
   choice
-    [ TokVar <$> ident upper
+    [ TokVar <$> ident (upper <|> char '_')
     , TokName <$> ident lower
     , TokInt <$> integer
     , TokLParen <$ char '('

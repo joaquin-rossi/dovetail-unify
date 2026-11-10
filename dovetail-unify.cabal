@@ -47,6 +47,7 @@ library
     exposed-modules:  Dovetail
                       Dovetail.Parser
                       Dovetail.Parser.Lexer
+                      Dovetail.Pretty
     build-depends:    base >=4.20 && <4.23,
                       containers >=0.7 && <0.9,
                       parsec ^>=3.1.18
@@ -59,9 +60,16 @@ test-suite dovetail-unify-test
     type:             exitcode-stdio-1.0
     hs-source-dirs:   test
     main-is:          Main.hs
-    other-modules:    DovetailSpec
+    other-modules:    AntiUnifySpec
+                      MatchSpec
                       ParserSpec
+                      PrettySpec
+                      SubstSpec
+                      Support.Generators
+                      Support.Terms
+                      UnifySpec
     build-depends:    base >=4.20 && <4.23,
                       containers >=0.7 && <0.9,
                       hspec ^>=2.11,
+                      QuickCheck >=2.14 && <2.20,
                       dovetail-unify

@@ -38,3 +38,12 @@ parseEquation "f(a, Y) = f(X, b)"
 parseEquations "X = f(Y), Y = a"
 -- Right [Equation (Var "X") (Fun "f" [Var "Y"]),Equation (Var "Y") (Fun "a" [])]
 ```
+
+And rendered back:
+
+```haskell
+import Dovetail.Pretty
+
+prettyTerm (Fun "f" [Var "X", atom "a"])
+-- "f(X, a)"
+```

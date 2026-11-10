@@ -34,13 +34,22 @@ spec = do
       parseTerm "  f( X ,  a )  " `shouldBe` Right (Fun "f" [Var "X", atom "a"])
       parseTerm "f (a)" `shouldBe` parseTerm "f(a)"
 
+    it "names each anonymous variable apart" $ do
+      parseTerm "_" `shouldBe` Right (Var "_1")
+      parseTerm "f(_, X, _)" `shouldBe` Right (Fun "f" [Var "_1", Var "X", Var "_2"])
+
+    it "avoids names already in use for anonymous variables" $ do
+      parseTerm "f(_, _1)" `shouldBe` Right (Fun "f" [Var "_2", Var "_1"])
+
+    it "parses named variables starting with an underscore" $ do
+      parseTerm "_Foo" `shouldBe` Right (Var "_Foo")
+
     it "rejects malformed input" $ do
       parseTerm "" `shouldSatisfy` isLeft
       parseTerm "f()" `shouldSatisfy` isLeft
       parseTerm "f(a" `shouldSatisfy` isLeft
       parseTerm "f(a,)" `shouldSatisfy` isLeft
       parseTerm "X(a)" `shouldSatisfy` isLeft
-      parseTerm "_" `shouldSatisfy` isLeft
       parseTerm "42(a)" `shouldSatisfy` isLeft
       parseTerm "1a" `shouldSatisfy` isLeft
       parseTerm "-" `shouldSatisfy` isLeft
@@ -57,6 +66,10 @@ spec = do
       parseEquation "f(X, b) = f(a, Y)"
         `shouldBe` Right (Equation (Fun "f" [Var "X", atom "b"]) (Fun "f" [atom "a", Var "Y"]))
       parseEquation "X=a" `shouldBe` Right (Equation (Var "X") (atom "a"))
+
+    it "names anonymous variables apart on both sides" $ do
+      parseEquation "f(_) = f(_)"
+        `shouldBe` Right (Equation (Fun "f" [Var "_1"]) (Fun "f" [Var "_2"]))
 
     it "rejects malformed equations" $ do
       parseEquation "a" `shouldSatisfy` isLeft
@@ -76,6 +89,10 @@ spec = do
       parseEquations "X = f(Y, Z), Y = a"
         `shouldBe` Right [Equation (Var "X") (Fun "f" [Var "Y", Var "Z"]), Equation (Var "Y") (atom "a")]
       parseEquations "X = a" `shouldBe` Right [Equation (Var "X") (atom "a")]
+
+    it "names anonymous variables apart across equations" $ do
+      parseEquations "X = _, Y = f(_, _3)"
+        `shouldBe` Right [Equation (Var "X") (Var "_1"), Equation (Var "Y") (Fun "f" [Var "_2", Var "_3"])]
 
     it "rejects malformed systems" $ do
       parseEquations "" `shouldSatisfy` isLeft

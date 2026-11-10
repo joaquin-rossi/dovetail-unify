@@ -1,6 +1,7 @@
 -- | Parser for Prolog-style terms and equations.
 --
--- * Variables start with an uppercase letter: @X@, @Foo@
+-- * Variables start with an uppercase letter or an underscore: @X@, @Foo@, @_Bar@
+-- * Each anonymous variable @_@ is a distinct variable, named @_1@, @_2@, ...
 -- * Functors are lowercase identifiers optionally followed by parenthesised arguments: @f(X, g(a))@
 -- * Integers are atoms (they cannot take arguments): @42@, @-7@
 -- * Equations are two terms separated by @=@: @f(X) = f(a)@
@@ -18,9 +19,12 @@ module Dovetail.Parser
   , equations
   ) where
 
+import Data.List (mapAccumL)
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Text.Parsec
 
-import Dovetail (Equation (..), Name, Term (..), atom)
+import Dovetail (Equation (..), Name, Term (..), atom, vars)
 import Dovetail.Parser.Lexer
 
 -- | A parser over the tokens produced by 'tokenize'.
@@ -28,15 +32,21 @@ type Parser = Parsec [Lexeme] ()
 
 -- | Parse a single term.
 parseTerm :: String -> Either ParseError Term
-parseTerm = runTokens term
+parseTerm input = do
+  t <- runTokens term input
+  pure (snd (nameAnonymous (vars t) 1 t))
 
 -- | Parse a single equation.
 parseEquation :: String -> Either ParseError Equation
-parseEquation = runTokens equation
+parseEquation input = do
+  e <- runTokens equation input
+  pure (snd (nameAnonymousEq (equationVars e) 1 e))
 
 -- | Parse one or more comma-separated equations.
 parseEquations :: String -> Either ParseError [Equation]
-parseEquations = runTokens equations
+parseEquations input = do
+  es <- runTokens equations input
+  pure (snd (mapAccumL (nameAnonymousEq (foldMap equationVars es)) 1 es))
 
 runTokens :: Parser a -> String -> Either ParseError a
 runTokens p input = do
@@ -55,6 +65,9 @@ equation :: Parser Equation
 equation = Equation <$> term <* symbol TokEquals <*> term
 
 -- | A variable, a functor with optional arguments, or an integer atom.
+--
+-- Anonymous variables are returned as @Var "_"@; the @parse*@ functions
+-- give each of them a distinct name.
 term :: Parser Term
 term = variable <|> functor <|> integer <?> "term"
 
@@ -78,6 +91,27 @@ functor = Fun <$> name <*> option [] args
 
     args :: Parser [Term]
     args = between (symbol TokLParen) (symbol TokRParen) (sepBy1 term (symbol TokComma))
+
+-- | Replace each anonymous variable with the next @_N@ not in the given set.
+nameAnonymous :: Set Name -> Int -> Term -> (Int, Term)
+nameAnonymous used = go
+  where
+    go i (Var "_") =
+      let j = until ((`Set.notMember` used) . name) (+ 1) i
+       in (j + 1, Var (name j))
+    go i t@(Var _) = (i, t)
+    go i (Fun f ts) = Fun f <$> mapAccumL go i ts
+
+    name j = '_' : show j
+
+nameAnonymousEq :: Set Name -> Int -> Equation -> (Int, Equation)
+nameAnonymousEq used i (Equation l r) =
+  let (i', l') = nameAnonymous used i l
+      (i'', r') = nameAnonymous used i' r
+   in (i'', Equation l' r')
+
+equationVars :: Equation -> Set Name
+equationVars (Equation l r) = vars l <> vars r
 
 symbol :: Token -> Parser ()
 symbol t = satisfyToken (\t' -> if t == t' then Just () else Nothing) <?> showToken t
