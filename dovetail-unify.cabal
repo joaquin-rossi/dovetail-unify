@@ -1,0 +1,50 @@
+cabal-version:      3.14
+name:               dovetail-unify
+version:            0.1.0.0
+-- synopsis:
+-- description:
+homepage:           https://github.com/joaquin-rossi/dovetail-unify
+license:            AGPL-3.0-or-later
+license-file:       LICENSE
+author:             Joaquín Rossi
+maintainer:         joaquin@joaquinrossi.net
+-- copyright:
+category:           Math
+build-type:         Simple
+extra-doc-files:
+    README.md
+
+-- extra-source-files:
+
+common extensions
+    default-language: GHC2024
+
+common ghc-options
+    ghc-options: -Wall -Widentities
+
+common rts-options
+    ghc-options: -rtsopts -threaded "-with-rtsopts=-N"
+
+library
+    import:           extensions
+    import:           ghc-options
+    exposed-modules:  Dovetail
+    other-modules:    Dovetail.Util
+    -- other-extensions:
+    build-depends:    base ^>=4.20.2.0,
+                      containers ^>=0.7
+    hs-source-dirs:   src
+
+test-suite dovetail-unify-test
+    import:           extensions
+    import:           ghc-options
+    import:           rts-options
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    other-modules:    DovetailSpec
+    build-depends:    base ^>=4.20.2.0,
+                      containers ^>=0.7,
+                      hspec ^>=2.11,
+                      dovetail-unify
+    build-tool-depends: hspec-discover:hspec-discover ^>=2.11

@@ -1,0 +1,22 @@
+# Cabal
+dist-newstyle/
+cabal.project.local*
+.ghc.environment.*
+
+# Stack
+.stack-work/
+
+# GHC
+*.hi
+*.o
+*.dyn_hi
+*.dyn_o
+*.prof
+*.hp
+*.eventlog
+
+# HLS / editors
+.hie/
+*.swp
+.vscode/
+.idea/
