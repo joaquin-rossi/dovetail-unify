@@ -6,6 +6,7 @@ module Dovetail
   , atom
   , vars
   , occursVar
+  , rename
 
     -- * Substitutions
   , Subst
@@ -28,7 +29,8 @@ module Dovetail
   , antiUnifyAll
   ) where
 
-import Data.List (mapAccumL, transpose)
+import Data.Char (isDigit)
+import Data.List (dropWhileEnd, mapAccumL, transpose)
 import Data.List.NonEmpty (NonEmpty (..))
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Map.Strict (Map)
@@ -61,6 +63,24 @@ vars (Var n) = Set.singleton n
 occursVar :: Name -> Term -> Bool
 occursVar n (Fun _ ts) = any (occursVar n) ts
 occursVar n (Var m) = n == m
+
+-- | Rename the variables of a term that occur in the given set, so that the
+-- result shares no variables with it. Returns the renamed term and the
+-- renaming, so @applySubst ren t == t'@.
+--
+-- A variable @X@ or @X1@ is renamed to the first of @X1@, @X2@, ... not in
+-- the set nor in the term.
+rename :: Set Name -> Term -> (Term, Subst)
+rename avoid t = (applySubst ren t, ren)
+  where
+    ren = Map.fromList (snd (mapAccumL fresh (avoid <> vars t) clashing))
+    clashing = Set.toList (vars t `Set.intersection` avoid)
+
+    fresh used n =
+      let base = dropWhileEnd isDigit n
+          name i = base ++ show (i :: Int)
+          n' = name (until ((`Set.notMember` used) . name) (+ 1) 1)
+       in (Set.insert n' used, (n, Var n'))
 
 -- | A mapping from variables to the terms that replace them.
 type Subst = Map Name Term

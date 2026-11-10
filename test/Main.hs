@@ -7,10 +7,12 @@ import MatchSpec qualified
 import ParserSpec qualified
 import PrettySpec qualified
 import SubstSpec qualified
+import TermSpec qualified
 import UnifySpec qualified
 
 main :: IO ()
 main = hspec $ do
+  describe "Terms" TermSpec.spec
   describe "Substitutions" SubstSpec.spec
   describe "Unification" UnifySpec.spec
   describe "Matching" MatchSpec.spec

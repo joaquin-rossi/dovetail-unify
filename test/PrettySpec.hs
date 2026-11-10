@@ -46,3 +46,10 @@ spec = do
       prettySubst (Map.fromList [("Y", atom "a"), ("X", Fun "f" [Var "Y"])])
         `shouldBe` "{X ↦ f(Y), Y ↦ a}"
       prettySubst Map.empty `shouldBe` "{}"
+
+  describe "prettyUnifyError" $ do
+    it "describes each kind of error" $ do
+      prettyUnifyError (Clash "f" "g") `shouldBe` "cannot unify f with g"
+      prettyUnifyError (ArityMismatch "f" 1 2) `shouldBe` "cannot unify f/1 with f/2"
+      prettyUnifyError (OccursCheck "X" (Fun "f" [Var "X"]))
+        `shouldBe` "occurs check: X occurs in f(X)"
