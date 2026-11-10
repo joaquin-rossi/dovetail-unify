@@ -7,13 +7,13 @@ import Dovetail
 
 spec :: Spec
 spec = do
-  let lhs = TTerm "f" [atom "1", TVar "y"]
-      rhs = TTerm "f" [TVar "x", atom "2"]
-      s = Map.fromList [("x", atom "1"), ("y", atom "2")]
+  let lhs = TFun "f" [atom "a", TVar "Y"]
+      rhs = TFun "f" [TVar "X", atom "b"]
+      s = Map.fromList [("X", atom "a"), ("Y", atom "b")]
 
   it "unify works" $ do
-    unify lhs rhs `shouldBe` Right s
+    unify (Equation lhs rhs) `shouldBe` Right s
 
   it "applySubst works" $ do
-    applySubst s lhs `shouldBe` TTerm "f" [atom "1", atom "2"]
-    applySubst s rhs `shouldBe` TTerm "f" [atom "1", atom "2"]
+    applySubst s lhs `shouldBe` TFun "f" [atom "a", atom "b"]
+    applySubst s rhs `shouldBe` TFun "f" [atom "a", atom "b"]

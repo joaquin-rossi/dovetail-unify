@@ -23,16 +23,20 @@ common ghc-options
     ghc-options: -Wall -Widentities
 
 common rts-options
-    ghc-options: -rtsopts -threaded "-with-rtsopts=-N"
+    ghc-options: -rtsopts
+    if !arch(wasm32)
+        ghc-options: -threaded "-with-rtsopts=-N"
 
 library
     import:           extensions
     import:           ghc-options
     exposed-modules:  Dovetail
-    other-modules:    Dovetail.Util
+                      Dovetail.Parser
+                      Dovetail.Parser.Lexer
     -- other-extensions:
-    build-depends:    base ^>=4.20.2.0,
-                      containers ^>=0.7
+    build-depends:    base >=4.20 && <4.23,
+                      containers >=0.7 && <0.9,
+                      parsec ^>=3.1.18
     hs-source-dirs:   src
 
 test-suite dovetail-unify-test
@@ -43,8 +47,8 @@ test-suite dovetail-unify-test
     hs-source-dirs:   test
     main-is:          Main.hs
     other-modules:    DovetailSpec
-    build-depends:    base ^>=4.20.2.0,
-                      containers ^>=0.7,
+                      ParserSpec
+    build-depends:    base >=4.20 && <4.23,
+                      containers >=0.7 && <0.9,
                       hspec ^>=2.11,
                       dovetail-unify
-    build-tool-depends: hspec-discover:hspec-discover ^>=2.11
