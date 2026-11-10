@@ -10,8 +10,8 @@ spec :: Spec
 spec = do
   describe "parseTerm" $ do
     it "parses variables" $ do
-      parseTerm "X" `shouldBe` Right (TVar "X")
-      parseTerm "Foo_1" `shouldBe` Right (TVar "Foo_1")
+      parseTerm "X" `shouldBe` Right (Var "X")
+      parseTerm "Foo_1" `shouldBe` Right (Var "Foo_1")
 
     it "parses atoms" $ do
       parseTerm "a" `shouldBe` Right (atom "a")
@@ -23,14 +23,14 @@ spec = do
       parseTerm "007" `shouldBe` Right (atom "7")
       parseTerm "-7" `shouldBe` Right (atom "-7")
       parseTerm "-0" `shouldBe` Right (atom "0")
-      parseTerm "f(1, X)" `shouldBe` Right (TFun "f" [atom "1", TVar "X"])
+      parseTerm "f(1, X)" `shouldBe` Right (Fun "f" [atom "1", Var "X"])
 
     it "parses functors with arguments" $ do
       parseTerm "f(X, g(a), b)"
-        `shouldBe` Right (TFun "f" [TVar "X", TFun "g" [atom "a"], atom "b"])
+        `shouldBe` Right (Fun "f" [Var "X", Fun "g" [atom "a"], atom "b"])
 
     it "ignores whitespace between tokens" $ do
-      parseTerm "  f( X ,  a )  " `shouldBe` Right (TFun "f" [TVar "X", atom "a"])
+      parseTerm "  f( X ,  a )  " `shouldBe` Right (Fun "f" [Var "X", atom "a"])
       parseTerm "f (a)" `shouldBe` parseTerm "f(a)"
 
     it "rejects malformed input" $ do
@@ -54,8 +54,8 @@ spec = do
   describe "parseEquation" $ do
     it "parses equations" $ do
       parseEquation "f(X, b) = f(a, Y)"
-        `shouldBe` Right (Equation (TFun "f" [TVar "X", atom "b"]) (TFun "f" [atom "a", TVar "Y"]))
-      parseEquation "X=a" `shouldBe` Right (Equation (TVar "X") (atom "a"))
+        `shouldBe` Right (Equation (Fun "f" [Var "X", atom "b"]) (Fun "f" [atom "a", Var "Y"]))
+      parseEquation "X=a" `shouldBe` Right (Equation (Var "X") (atom "a"))
 
     it "rejects malformed equations" $ do
       parseEquation "a" `shouldSatisfy` isLeft
@@ -68,4 +68,4 @@ spec = do
             e@(Equation lhs _) <- either (Left . show) Right (parseEquation "f(a, Y) = f(X, b)")
             s <- either (Left . show) Right (unify e)
             pure (applySubst s lhs)
-      result `shouldBe` Right (TFun "f" [atom "a", atom "b"])
+      result `shouldBe` Right (Fun "f" [atom "a", atom "b"])

@@ -7,11 +7,11 @@ Haskell library for syntactic unification of first-order terms.
 ```haskell
 import Dovetail
 
-lhs = TFun "f" [atom "a", TVar "Y"]
-rhs = TFun "f" [TVar "X", atom "b"]
+lhs = Fun "f" [atom "a", Var "Y"]
+rhs = Fun "f" [Var "X", atom "b"]
 
 unify (Equation lhs rhs)
--- Right (fromList [("X",TFun "a" []),("Y",TFun "b" [])])
+-- Right (fromList [("X",Fun "a" []),("Y",Fun "b" [])])
 ```
 
 `unify` returns either a substitution (`Subst`) or a `UnifyError`
@@ -23,8 +23,8 @@ Terms and equations can also be parsed from Prolog-style syntax:
 import Dovetail.Parser
 
 parseTerm "f(X, g(a))"
--- Right (TFun "f" [TVar "X",TFun "g" [TFun "a" []]])
+-- Right (Fun "f" [Var "X",Fun "g" [Fun "a" []]])
 
 parseEquation "f(a, Y) = f(X, b)"
--- Right (Equation (TFun "f" [TFun "a" [],TVar "Y"]) (TFun "f" [TVar "X",TFun "b" []]))
+-- Right (Equation (Fun "f" [Fun "a" [],Var "Y"]) (Fun "f" [Var "X",Fun "b" []]))
 ```

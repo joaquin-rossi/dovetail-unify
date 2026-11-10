@@ -44,7 +44,7 @@ term = variable <|> functor <|> integer <?> "term"
 
 variable :: Parser Term
 variable = satisfyToken $ \case
-  TokVar n -> Just (TVar n)
+  TokVar n -> Just (Var n)
   _ -> Nothing
 
 integer :: Parser Term
@@ -53,7 +53,7 @@ integer = satisfyToken $ \case
   _ -> Nothing
 
 functor :: Parser Term
-functor = TFun <$> name <*> option [] args
+functor = Fun <$> name <*> option [] args
   where
     name :: Parser Name
     name = satisfyToken $ \case

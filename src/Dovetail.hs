@@ -6,20 +6,20 @@ import Data.Map.Strict qualified as Map
 type Name = String
 
 data Term =
-    TFun Name [Term]
-  | TVar Name
+    Fun Name [Term]
+  | Var Name
   deriving (Eq, Show)
 
 atom :: Name -> Term
-atom s = TFun s []
+atom s = Fun s []
 
 type Subst = Map Name Term
 
 applySubst :: Subst -> Term -> Term
 applySubst s = go
   where
-    go (TFun n ts) = TFun n (go <$> ts)
-    go t@(TVar n)  = Map.findWithDefault t n s
+    go (Fun n ts) = Fun n (go <$> ts)
+    go t@(Var n)  = Map.findWithDefault t n s
 
 extendSubst :: Name -> Term -> Subst -> Subst
 extendSubst n t s = 
@@ -34,8 +34,8 @@ data UnifyError =
   deriving (Eq, Show)
 
 occursVar :: Name -> Term -> Bool
-occursVar n (TFun _ ts) = any (occursVar n) ts
-occursVar n (TVar m) = n == m
+occursVar n (Fun _ ts) = any (occursVar n) ts
+occursVar n (Var m) = n == m
 
 unify :: Equation -> Either UnifyError Subst
 unify e = solve Map.empty [e]
@@ -45,13 +45,13 @@ solve s [] = Right s
 solve s (e:rest) =
   case e of
     -- Delete: X = X
-    Equation (TVar n) (TVar m) | n == m -> solve s rest
+    Equation (Var n) (Var m) | n == m -> solve s rest
     -- Eliminate: X = t
-    Equation (TVar n) t -> eliminate n t
+    Equation (Var n) t -> eliminate n t
     -- Orient: t = X
-    Equation t (TVar n) -> eliminate n t
+    Equation t (Var n) -> eliminate n t
     -- Decompose or Clash
-    Equation (TFun n us) (TFun m vs)
+    Equation (Fun n us) (Fun m vs)
       | n == m && length us == length vs -> solve s (zipWith Equation us vs ++ rest)
       | otherwise -> Left (Clash n m)
   where
